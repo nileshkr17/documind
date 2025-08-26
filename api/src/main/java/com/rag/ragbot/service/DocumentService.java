@@ -22,15 +22,37 @@ public class DocumentService {
     }
 
     public Document store(MultipartFile file) throws IOException {
-        String filePath = uploadDir + File.separator + file.getOriginalFilename();
+        String originalFilename = file.getOriginalFilename();
+        String safeFilename = sanitizeFilename(originalFilename);
+        String filePath = uploadDir + File.separator + safeFilename;
         File dest = new File(filePath);
         file.transferTo(dest);
         Document doc = new Document(
-            file.getOriginalFilename(),
+            safeFilename,
             file.getContentType(),
             file.getSize(),
             filePath
         );
         return documentRepository.save(doc);
+    }
+    /**
+     * Sanitizes a filename by removing path separators and allowing only safe characters.
+     */
+    private String sanitizeFilename(String filename) {
+        if (filename == null) {
+            return "unnamed";
+        }
+        // Remove any path components
+        filename = filename.replaceAll("\\\\", "/");
+        int lastSlash = filename.lastIndexOf('/');
+        if (lastSlash >= 0) {
+            filename = filename.substring(lastSlash + 1);
+        }
+        // Allow only alphanumerics, dot, underscore, and hyphen
+        filename = filename.replaceAll("[^A-Za-z0-9._-]", "_");
+        if (filename.isEmpty()) {
+            return "unnamed";
+        }
+        return filename;
     }
 }
