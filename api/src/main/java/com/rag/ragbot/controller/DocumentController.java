@@ -36,7 +36,7 @@ public class DocumentController {
             documentRepository.save(doc);
             return ResponseEntity.ok(doc);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to upload document", e);
             return ResponseEntity.badRequest().body("Upload failed: " + e.getMessage());
         }
     }
