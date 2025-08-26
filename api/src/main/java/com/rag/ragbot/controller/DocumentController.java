@@ -25,7 +25,16 @@ public class DocumentController {
             String uploadDir = "uploads";
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
-            String filePath = System.getProperty("user.dir") + File.separator + uploadDir + File.separator + file.getOriginalFilename();
+            // Generate a unique filename to prevent overwriting
+            String originalFilename = file.getOriginalFilename();
+            String fileExtension = "";
+            int dotIndex = originalFilename.lastIndexOf('.');
+            if (dotIndex > 0) {
+                fileExtension = originalFilename.substring(dotIndex);
+                originalFilename = originalFilename.substring(0, dotIndex);
+            }
+            String uniqueFilename = originalFilename + "_" + UUID.randomUUID().toString() + fileExtension;
+            String filePath = System.getProperty("user.dir") + File.separator + uploadDir + File.separator + uniqueFilename;
             file.transferTo(new File(filePath));
             Document doc = new Document(
                 file.getOriginalFilename(),
