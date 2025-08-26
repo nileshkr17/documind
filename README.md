@@ -6,3 +6,7 @@ Upload document(s) → ingest (chunk + embed) → store vectors → ask question
 Deliverable you can demo: a single-page UI showing upload, a chat box, answer with citations, and a downloadable README + Docker Compose to run locally.
 
 ```
+
+
+- Created modular monorepo for RAG QA (API, RAG worker, frontend, infra)
+- 
