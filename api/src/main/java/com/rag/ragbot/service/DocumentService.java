@@ -37,7 +37,7 @@ public class DocumentService {
         );
         doc = documentRepository.save(doc);
         // Call chunking after saving document
-        documentChunkService.processAndChunk(doc);
+        documentProcessingService.processAndChunk(doc);
         return doc;
     }
     /**
