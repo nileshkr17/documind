@@ -52,6 +52,7 @@ public class DocumentProcessingService {
                 return "";
             }
         } catch (Exception e) {
+            logger.error("Failed to extract text from file: {}", filePath, e);
             return "";
         }
     }
