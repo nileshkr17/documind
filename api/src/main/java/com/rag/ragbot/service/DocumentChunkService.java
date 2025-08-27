@@ -1,3 +1,4 @@
+
 package com.rag.ragbot.service;
 
 import com.rag.ragbot.model.Document;
@@ -70,7 +71,6 @@ public class DocumentChunkService {
             return "";
         }
     }
-
     // Split text into chunks of 500-800 chars, not breaking words
     private List<String> splitTextToChunks(String text, int minSize, int maxSize) {
         List<String> chunks = new ArrayList<>();
@@ -91,5 +91,9 @@ public class DocumentChunkService {
             start = end;
         }
         return chunks;
+    }
+    // Delete all chunks
+    public void deleteAllChunks() {
+        chunkRepository.deleteAll();
     }
 }
