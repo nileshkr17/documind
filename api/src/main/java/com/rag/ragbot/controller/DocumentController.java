@@ -53,18 +53,19 @@ public class DocumentController {
             );
             documentRepository.save(doc);
             int chunkCount = documentProcessingService.processAndChunk(doc);
-            return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
-                put("document", doc);
-                put("chunkCount", chunkCount);
-                // Add a user-friendly documentType
-                String docType = "unknown";
-                if (doc.getType() != null) {
-                    if (doc.getType().contains("pdf")) docType = "pdf";
-                    else if (doc.getType().contains("wordprocessingml")) docType = "docx";
-                    else if (doc.getType().contains("text/plain")) docType = "txt";
-                }
-                put("documentType", docType);
-            }});
+            String docType = "unknown";
+            if (doc.getType() != null) {
+                if (doc.getType().contains("pdf")) docType = "pdf";
+                else if (doc.getType().contains("wordprocessingml")) docType = "docx";
+                else if (doc.getType().contains("text/plain")) docType = "txt";
+            }
+            return ResponseEntity.ok(
+                java.util.Map.of(
+                    "document", doc,
+                    "chunkCount", chunkCount,
+                    "documentType", docType
+                )
+            );
         } catch (Exception e) {
             logger.error("Failed to upload document", e);
             return ResponseEntity.badRequest().body("Upload failed: " + e.getMessage());
