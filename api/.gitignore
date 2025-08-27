@@ -1,0 +1,11 @@
+target/
+uploads/
+*.log
+*.tmp
+*.swp
+*.class
+*.jar
+*.war
+
+
+            
