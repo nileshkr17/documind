@@ -2,6 +2,7 @@ package com.rag.ragbot.controller;
 
 import com.rag.ragbot.model.Document;
 import com.rag.ragbot.repository.DocumentRepository;
+import com.rag.ragbot.service.DocumentProcessingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,12 +10,20 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentController {
+    private static final Logger logger = LoggerFactory.getLogger(DocumentController.class);
     @Autowired
     private DocumentRepository documentRepository;
+
+    @Autowired
+    private DocumentProcessingService documentProcessingService;
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadDocument(@RequestParam("file") MultipartFile file) {
@@ -43,7 +52,20 @@ public class DocumentController {
                 filePath
             );
             documentRepository.save(doc);
-            return ResponseEntity.ok(doc);
+            int chunkCount = documentProcessingService.processAndChunk(doc);
+            String docType = "unknown";
+            if (doc.getType() != null) {
+                if (doc.getType().contains("pdf")) docType = "pdf";
+                else if (doc.getType().contains("wordprocessingml")) docType = "docx";
+                else if (doc.getType().contains("text/plain")) docType = "txt";
+            }
+            return ResponseEntity.ok(
+                java.util.Map.of(
+                    "document", doc,
+                    "chunkCount", chunkCount,
+                    "documentType", docType
+                )
+            );
         } catch (Exception e) {
             logger.error("Failed to upload document", e);
             return ResponseEntity.badRequest().body("Upload failed: " + e.getMessage());

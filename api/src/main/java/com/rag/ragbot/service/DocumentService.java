@@ -12,11 +12,13 @@ import java.io.IOException;
 @Service
 public class DocumentService {
     private final DocumentRepository documentRepository;
+    private final DocumentChunkService documentChunkService;
     private final String uploadDir = "uploads";
 
     @Autowired
-    public DocumentService(DocumentRepository documentRepository) {
+    public DocumentService(DocumentRepository documentRepository, DocumentChunkService documentChunkService) {
         this.documentRepository = documentRepository;
+        this.documentChunkService = documentChunkService;
         File dir = new File(uploadDir);
         if (!dir.exists()) dir.mkdirs();
     }
@@ -33,7 +35,10 @@ public class DocumentService {
             file.getSize(),
             filePath
         );
-        return documentRepository.save(doc);
+        doc = documentRepository.save(doc);
+        // Call chunking after saving document
+        documentProcessingService.processAndChunk(doc);
+        return doc;
     }
     /**
      * Sanitizes a filename by removing path separators and allowing only safe characters.
