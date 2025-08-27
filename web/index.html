@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG QA Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+    h1 { text-align: center; color: #2c3e50; }
+    label { font-weight: bold; }
+    input[type="file"] { margin-bottom: 16px; }
+    textarea, input[type="text"] { width: 100%; padding: 8px; margin: 8px 0 16px 0; border-radius: 4px; border: 1px solid #ccc; }
+    button { background: #2c3e50; color: #fff; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    button:hover { background: #34495e; }
+    .result { background: #eafaf1; border-left: 4px solid #27ae60; padding: 12px; margin: 12px 0; border-radius: 4px; }
+    .error { background: #fdecea; border-left: 4px solid #e74c3c; padding: 12px; margin: 12px 0; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>RAG QA Chatbot</h1>
+    <form id="uploadForm" style="margin-bottom:20px;">
+      <label for="file">Upload Knowledge Base:</label><br>
+      <input type="file" id="file" name="file" required><br>
+      <button type="submit">Upload & Embed</button>
+    </form>
+    <div id="uploadStatus"></div>
+    <div id="chatWindow" style="background:#f4f8fb; border-radius:8px; min-height:300px; max-height:350px; overflow-y:auto; padding:16px; margin-bottom:16px; border:1px solid #e0e0e0;"></div>
+    <form id="chatForm" style="display:flex; gap:8px;">
+      <input type="text" id="query" name="query" placeholder="Type your question..." required style="flex:1;">
+      <button type="submit">Send</button>
+    </form>
+  </div>
+  <script>
+    let lastDocumentId = null;
+    document.getElementById('uploadForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('file');
+      let lastDocumentId = null;
+      const chatWindow = document.getElementById('chatWindow');
+      let chatHistory = [];
+
+      document.getElementById('uploadForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('file');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        document.getElementById('uploadStatus').innerHTML = 'Uploading...';
+        try {
+          const res = await fetch('http://localhost:8080/api/documents/upload', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (res.ok) {
+            lastDocumentId = data.document.id;
+            const fileName = fileInput.files[0] ? fileInput.files[0].name : '';
+            document.getElementById('uploadStatus').innerHTML = `<div class="result">Uploaded <b>${fileName}</b>!<br>Document ID: <b>${lastDocumentId}</b><br>Chunks: ${data.chunkCount}</div>`;
+            fileInput.disabled = true;
+            this.querySelector('button[type="submit"]').disabled = true;
+          } else {
+            document.getElementById('uploadStatus').innerHTML = `<div class="error">${data}</div>`;
+          }
+        } catch (err) {
+          document.getElementById('uploadStatus').innerHTML = `<div class="error">Upload failed.</div>`;
+        }
+      };
+
+      function renderChat() {
+        chatWindow.innerHTML = chatHistory.map(msg =>
+          `<div style="display:flex; margin-bottom:10px;">
+            <div style="max-width:80%; padding:10px 16px; border-radius:16px; background:${msg.role==='user' ? '#e1f5fe' : '#eafaf1'}; color:#222; margin-left:${msg.role==='user' ? 'auto' : '0'}; margin-right:${msg.role==='user' ? '0' : 'auto'}; box-shadow:0 1px 4px #0001;">
+              <b>${msg.role==='user' ? 'You' : 'Bot'}:</b> ${msg.text}
+            </div>
+          </div>`
+        ).join('');
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+
+      document.getElementById('chatForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const queryInput = document.getElementById('query');
+        const query = queryInput.value;
+        if (!query.trim()) return;
+        chatHistory.push({ role: 'user', text: query });
+        renderChat();
+        queryInput.value = '';
+        try {
+          const res = await fetch('http://127.0.0.1:8000/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, top_k: 5 })
+          });
+          const data = await res.json();
+          let answer = null;
+          if (Array.isArray(data) && data.length > 0 && data[0].chunk_text && data[0].chunk_text.trim() !== "") {
+            // Direct QA extraction for refund, name, and general questions
+            const chunk = data[0].chunk_text;
+            // Try to extract a sentence containing a keyword from the query
+            const sentences = chunk.split(/(?<=[.!?])\s+/);
+            let bestSentence = null;
+            // First, try to find a non-question sentence containing a keyword
+            for (const s of sentences) {
+              if (!s.trim().endsWith('?') && query.split(/\s+/).some(word => word.length > 2 && s.toLowerCase().includes(word))) {
+                bestSentence = s;
+                break;
+              }
+            }
+            // If not found, fall back to any sentence with a keyword (including questions)
+            if (!bestSentence) {
+              for (const s of sentences) {
+                if (query.split(/\s+/).some(word => word.length > 2 && s.toLowerCase().includes(word))) {
+                  bestSentence = s;
+                  break;
+                }
+              }
+            }
+            if (bestSentence) answer = bestSentence.trim();
+            // Fallback: 'my name' extraction
+            if (!answer && query.toLowerCase().includes('my name')) {
+              let match = chunk.toLowerCase().match(/([a-zA-Z]+) is my name/);
+              if (match) answer = match[1];
+              else {
+                match = chunk.toLowerCase().match(/my name is ([a-zA-Z]+)/);
+                if (match) answer = match[1];
+              }
+            }
+          }
+          if (answer) {
+            chatHistory.push({ role: 'bot', text: answer });
+          } else {
+            chatHistory.push({ role: 'bot', text: 'No relevant answer found.' });
+          }
+          renderChat();
+        } catch (err) {
+          chatHistory.push({ role: 'bot', text: 'Search failed.' });
+          renderChat();
+        }
+      };
+    };
+  </script>
+</body>
+</html>

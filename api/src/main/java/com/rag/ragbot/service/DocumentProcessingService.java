@@ -1,10 +1,14 @@
+
 package com.rag.ragbot.service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.rag.ragbot.model.Document;
 import com.rag.ragbot.model.DocumentChunk;
 import com.rag.ragbot.repository.DocumentChunkRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,17 +22,22 @@ import org.apache.pdfbox.text.PDFTextStripper;
 
 @Service
 public class DocumentProcessingService {
+    private static final Logger logger = LoggerFactory.getLogger(DocumentProcessingService.class);
     private final DocumentChunkRepository chunkRepository;
+    private final EmbeddingServiceClient embeddingServiceClient;
 
     @Autowired
-    public DocumentProcessingService(DocumentChunkRepository chunkRepository) {
+    public DocumentProcessingService(DocumentChunkRepository chunkRepository, EmbeddingServiceClient embeddingServiceClient) {
         this.chunkRepository = chunkRepository;
+        this.embeddingServiceClient = embeddingServiceClient;
     }
 
     public int processAndChunk(Document document) {
         String text = extractText(document.getPath());
-        List<DocumentChunk> chunks = splitToChunks(document.getId(), text, 500);
+    List<DocumentChunk> chunks = splitToChunks(document.getId(), text, 200);
         chunkRepository.saveAll(chunks);
+        // Call embedding service after saving chunks
+        embeddingServiceClient.sendChunksForEmbedding(document.getId(), chunks);
         return chunks.size();
     }
 
@@ -63,7 +72,7 @@ public class DocumentProcessingService {
         for (int start = 0; start < text.length(); start += chunkSize) {
             int end = Math.min(start + chunkSize, text.length());
             String chunkText = text.substring(start, end);
-            chunks.add(new DocumentChunk(documentId, index++, chunkText));
+            chunks.add(new DocumentChunk(documentId, index++, chunkText, null));
         }
         return chunks;
     }

@@ -9,6 +9,8 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,18 +21,30 @@ import java.util.UUID;
 
 @Service
 public class DocumentChunkService {
+    private static final Logger logger = LoggerFactory.getLogger(DocumentChunkService.class);
     private final DocumentChunkRepository chunkRepository;
+    private final EmbeddingService embeddingService;
 
     @Autowired
-    public DocumentChunkService(DocumentChunkRepository chunkRepository) {
+    public DocumentChunkService(DocumentChunkRepository chunkRepository, EmbeddingService embeddingService) {
         this.chunkRepository = chunkRepository;
+        this.embeddingService = embeddingService;
+    }
+    // Save chunks with embeddings
+    public void saveChunksWithEmbeddings(UUID documentId, List<String> chunks) {
+        int idx = 0;
+        for (String chunk : chunks) {
+            float[] embedding = embeddingService.generateEmbedding(chunk);
+            DocumentChunk docChunk = new DocumentChunk(documentId, idx++, chunk, embedding);
+            chunkRepository.save(docChunk);
+        }
     }
 
     public int processAndChunk(Document document) {
         String text = extractText(document.getPath());
-        List<DocumentChunk> chunks = splitToChunks(document.getId(), text, 500, 800);
-        chunkRepository.saveAll(chunks);
-        return chunks.size();
+        List<String> chunkTexts = splitTextToChunks(text, 500, 800);
+        saveChunksWithEmbeddings(document.getId(), chunkTexts);
+        return chunkTexts.size();
     }
 
     private String extractText(String filePath) {
@@ -57,12 +71,13 @@ public class DocumentChunkService {
         }
     }
 
-    private List<DocumentChunk> splitToChunks(UUID documentId, String text, int minSize, int maxSize) {
-        List<DocumentChunk> chunks = new ArrayList<>();
-        int index = 0;
+    // Split text into chunks of 500-800 chars, not breaking words
+    private List<String> splitTextToChunks(String text, int minSize, int maxSize) {
+        List<String> chunks = new ArrayList<>();
         int start = 0;
         while (start < text.length()) {
             int end = Math.min(start + maxSize, text.length());
+            // Try to break at a word boundary
             if (end < text.length()) {
                 int lastSpace = text.lastIndexOf(' ', end);
                 if (lastSpace > start + minSize) {
@@ -71,7 +86,7 @@ public class DocumentChunkService {
             }
             String chunkText = text.substring(start, end).trim();
             if (!chunkText.isEmpty()) {
-                chunks.add(new DocumentChunk(documentId, index++, chunkText));
+                chunks.add(chunkText);
             }
             start = end;
         }
