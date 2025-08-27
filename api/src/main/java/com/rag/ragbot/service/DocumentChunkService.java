@@ -52,6 +52,7 @@ public class DocumentChunkService {
                 return Files.readString(new File(filePath).toPath());
             }
         } catch (Exception e) {
+            logger.error("Failed to extract text from file: {}", filePath, e);
             return "";
         }
     }
