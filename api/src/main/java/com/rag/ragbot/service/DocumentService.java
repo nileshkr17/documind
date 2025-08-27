@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import java.io.File;
 import java.io.IOException;
 
@@ -37,7 +38,7 @@ public class DocumentService {
         );
         doc = documentRepository.save(doc);
         // Call chunking after saving document
-        documentProcessingService.processAndChunk(doc);
+    documentChunkService.processAndChunk(doc);
         return doc;
     }
     /**

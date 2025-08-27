@@ -1,8 +1,0 @@
-This is a sample text file for upload testing.
-You can use this file to test the /api/documents/upload endpoint.
-nilesh
-lorem500
-lorem500 words
-
-lorem500 words lorem500 words klsakd random sentence. 
-    

@@ -1,0 +1,24 @@
+Welcome to Swiggy Delivery Support!
+
+Order not delivered?
+If your order has not arrived, please check the order status in the app. If it shows 'Out for delivery', your delivery partner is on the way. If it is delayed by more than 15 minutes, you can contact support.
+
+How to contact the delivery partner?
+Tap on your active order in the Swiggy app and use the 'Call Delivery Partner' button to connect directly.
+
+How to cancel an order?
+You can cancel your order before it is accepted by the restaurant. Go to 'My Orders', select the order, and tap 'Cancel Order'. If the restaurant has already started preparing your food, cancellation may not be possible.
+
+How to get a refund?
+If your order was cancelled or not delivered, Swiggy will automatically process a refund to your original payment method within 2-5 business days.
+
+What if my food is missing or wrong?
+If you received the wrong items or something is missing, go to 'Help' in the app, select your order, and choose the relevant issue. Our support team will assist you and process a refund or redelivery if needed.
+
+How to update delivery address?
+You can update your address before placing an order. Once the order is placed, the address cannot be changed.
+
+How to rate and review?
+After your order is delivered, you can rate your experience and leave a review in the app under 'My Orders'.
+
+For any other issues, please use the 'Help' section in the Swiggy app for instant support.
