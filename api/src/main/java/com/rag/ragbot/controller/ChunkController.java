@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/chunks")
 public class ChunkController {
@@ -18,7 +17,13 @@ public class ChunkController {
 
     @DeleteMapping
     public ResponseEntity<?> deleteAllChunks() {
-        chunkService.deleteAllChunks();
-        return ResponseEntity.ok("All chunks deleted");
+        try {
+            chunkService.deleteAllChunks();
+            return ResponseEntity.ok("All chunks deleted");
+        } catch (Exception e) {
+            // Log the error with stack trace
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Failed to delete chunks: " + e.getMessage());
+        }
     }
 }

@@ -5,6 +5,7 @@ from typing import List
 import asyncpg
 from sentence_transformers import SentenceTransformer
 import numpy as np
+import requests
 
 # Load environment variables for DB connection
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
@@ -42,6 +43,13 @@ class SearchRequest(BaseModel):
 class SearchResult(BaseModel):
     chunk_text: str
     score: float
+
+class GenerateRequest(BaseModel):
+    context: str
+    question: str
+
+class GenerateResponse(BaseModel):
+    response: str
 
 @app.on_event("startup")
 async def startup():
@@ -91,5 +99,24 @@ async def search_chunks(req: SearchRequest):
                 query_emb_str, req.top_k
             )
         return [{"chunk_text": row["chunk_text"], "score": row["score"]} for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate", response_model=GenerateResponse)
+def generate_llm_response(req: GenerateRequest):
+    prompt = (
+        "Your name is Nileshh. You are a helpful, knowledgeable assistant. Use the following document context to answer the user's question as if you are a human expert."
+        "\n\nDocument context:\n" + req.context +
+        "\n\nUser question: " + req.question +
+        "\n\nGive a short, concise, and casual answer, as if you are chatting with a friend. Answer as if you personally know the information, not as if you are reading from a document. Do not mention 'the document', 'document context', or similar unless the user specifically asks for a source or proof. Do not explain your reasoning unless the user asks for proof, explanation, or reasoning. If the user asks for proof, explanation, or reasoning, then break down your logic step by step and cite the document context. If the answer is not explicit in the document, use logical inference from names, relationships, or context (for example, infer gender from names or family roles if possible). If the answer is ambiguous, discuss possible interpretations and explain which is most likely and why. If the answer is not present, say so.\nAnswer:"
+    )
+    try:
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "llama3", "prompt": prompt, "stream": False}
+        )
+        response.raise_for_status()
+        data = response.json()
+        return {"response": data["response"]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

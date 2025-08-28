@@ -94,6 +94,11 @@ public class DocumentChunkService {
     }
     // Delete all chunks
     public void deleteAllChunks() {
-        chunkRepository.deleteAll();
+        try {
+            chunkRepository.deleteAll();
+        } catch (Exception e) {
+            logger.error("Error deleting all chunks", e);
+            throw e;
+        }
     }
 }
