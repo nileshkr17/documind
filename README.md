@@ -1,5 +1,14 @@
-## Database (PostgreSQL) Commands
+##Documind
 
+<img width="1728" height="963" alt="Screenshot 2025-08-29 at 3 00 46 AM" src="https://github.com/user-attachments/assets/016e4953-e984-44d6-a2d3-5fd1f66a42b2" />
+
+
+<img width="1728" height="957" alt="Screenshot 2025-08-29 at 3 03 17 AM" src="https://github.com/user-attachments/assets/ecbb297a-13ad-4a18-a215-b345c12c1e4d" />
+
+
+<img width="1727" height="962" alt="Screenshot 2025-08-29 at 3 03 28 AM" src="https://github.com/user-attachments/assets/1fdf1cd2-294d-4724-afa5-655b1fdf01ad" />
+
+## Database (PostgreSQL) Commands
 ### 1. Open PostgreSQL Shell
 
 ```
