@@ -4,3 +4,9 @@ web-react
 node_modules
 __pycache__/
 *.pyc
+*.iml
+target/
+.vscode/
+*.log
+uploads/
+.DS_Store

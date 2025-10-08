@@ -1,5 +1,9 @@
 ##Documind
 
+A microservices-based RAG (Retrieval-Augmented Generation) application with JWT authentication for intelligent document processing and Q&A.
+
+📚 **[Quick Start Guide](./QUICKSTART.md)** | 📖 **[API Documentation](./API_DOCS.md)**
+
 <img width="1728" height="963" alt="Screenshot 2025-08-29 at 3 00 46 AM" src="https://github.com/user-attachments/assets/016e4953-e984-44d6-a2d3-5fd1f66a42b2" />
 
 
