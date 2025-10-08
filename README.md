@@ -142,4 +142,60 @@ Documind now includes multiple microservices:
 
 All services share the same PostgreSQL database running on port 5432.
 
+## Running with Docker Compose
+
+The easiest way to run all services is using Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+This will start:
+- PostgreSQL database on port 5432
+- Auth Service on port 8082
+- Main API on port 8080
+- Embedding Service on port 8000
+
+To stop all services:
+```bash
+docker-compose down
+```
+
+To view logs:
+```bash
+docker-compose logs -f
+```
+
+## Testing the Auth Service
+
+Use the provided test script:
+```bash
+./test-auth.sh
+```
+
+Or test manually with curl:
+
+**Register a new user:**
+```bash
+curl -X POST http://localhost:8082/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_doe",
+    "email": "john@example.com",
+    "password": "securePass123"
+  }'
+```
+
+**Login:**
+```bash
+curl -X POST http://localhost:8082/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_doe",
+    "password": "securePass123"
+  }'
+```
+
+The response will include a JWT token that should be used in the `Authorization: Bearer <token>` header for authenticated requests to the main API.
+
 - Created modular monorepo for RAG QA (API, RAG worker, frontend, infra)

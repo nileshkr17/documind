@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: documind-postgres
+    environment:
+      POSTGRES_DB: ragbot
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: ragpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raguser -d ragbot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: documind-auth
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ragbot
+      - SPRING_DATASOURCE_USERNAME=raguser
+      - SPRING_DATASOURCE_PASSWORD=ragpass
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: documind-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ragbot
+      - SPRING_DATASOURCE_USERNAME=raguser
+      - SPRING_DATASOURCE_PASSWORD=ragpass
+      - EMBEDDING_API_URL=http://embedding-service:8000/embed
+    depends_on:
+      postgres:
+        condition: service_healthy
+      embedding-service:
+        condition: service_started
+    restart: unless-stopped
+
+  embedding-service:
+    build:
+      context: ./embedding-service
+      dockerfile: Dockerfile
+    container_name: documind-embedding
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=ragbot
+      - DB_USER=raguser
+      - DB_PASS=ragpass
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
