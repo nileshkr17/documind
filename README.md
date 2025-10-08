@@ -66,7 +66,16 @@ Deliverable you can demo: a single-page UI showing upload, a chat box, answer wi
 
 ## How to Run the Backend (Before React Frontend)
 
-### 1. Start the Python Embedding Service
+### 1. Start the Authentication Service
+
+```
+cd auth-service
+mvn clean install
+mvn spring-boot:run
+```
+The auth service runs at http://localhost:8082
+
+### 2. Start the Python Embedding Service
 
 ```
 cd embedding-service
@@ -78,11 +87,11 @@ uvicorn app:app --reload
 ```
 The service runs at http://localhost:8000
 
-### 2. Start PostgreSQL Database
+### 3. Start PostgreSQL Database
 - Make sure PostgreSQL is running and accessible.
 - Ensure the database and tables are created as per your Spring Boot configuration (`application.properties`).
 
-### 3. Start the Java Spring Boot Backend
+### 4. Start the Java Spring Boot Backend
 
 ```
 cd api
@@ -92,12 +101,12 @@ cd api
 The backend runs at http://localhost:8080
 
 
-### 4. Test the Endpoints
+### 5. Test the Endpoints
 - Use Postman or curl to test:
 	- Document upload: `POST /api/upload`
 	- Search: `POST /api/search` with JSON body like `{ "question": "cancel an order" }`
 
-### 5. Delete All Chunks (Optional)
+### 6. Delete All Chunks (Optional)
 - To delete all document chunks from the database, use:
 
 ```
@@ -106,10 +115,31 @@ curl -X DELETE http://localhost:8080/api/chunks
 Or use Postman to send a DELETE request to `/api/chunks`.
 
 
-### 6. (Optional) Upload Documents
+### 7. (Optional) Upload Documents
 - Use the upload endpoint or UI to upload documents for chunking and embedding.
 
 Once these are running, you can start the React frontend (see web-react/ for instructions).
 
+## Microservices Architecture
+
+Documind now includes multiple microservices:
+
+1. **Auth Service (Port 8082)** - JWT-based authentication and user management
+   - User registration and login
+   - JWT token generation and validation
+   - Role-based access control
+   - See `auth-service/README.md` for details
+
+2. **Main API (Port 8080)** - Document processing and RAG operations
+   - Document upload and management
+   - Chunking and processing
+   - Search and query endpoints
+
+3. **Embedding Service (Port 8000)** - Python-based embedding generation
+   - Sentence transformer embeddings
+   - Vector storage in PostgreSQL
+   - LLM integration for response generation
+
+All services share the same PostgreSQL database running on port 5432.
 
 - Created modular monorepo for RAG QA (API, RAG worker, frontend, infra)
